@@ -34,8 +34,10 @@ FROM --platform=linux/amd64 cpu-builder-amd64 AS static-build-amd64
 RUN OLLAMA_CPU_TARGET="static" sh gen_linux.sh
 FROM --platform=linux/amd64 cpu-builder-amd64 AS cpu-build-amd64
 RUN OLLAMA_SKIP_STATIC_GENERATE=1 OLLAMA_CPU_TARGET="cpu" sh gen_linux.sh
+
 FROM --platform=linux/amd64 cpu-builder-amd64 AS cpu_avx-build-amd64
 RUN OLLAMA_SKIP_STATIC_GENERATE=1 OLLAMA_CPU_TARGET="cpu_avx" sh gen_linux.sh
+
 FROM --platform=linux/amd64 cpu-builder-amd64 AS cpu_avx2-build-amd64
 RUN OLLAMA_SKIP_STATIC_GENERATE=1 OLLAMA_CPU_TARGET="cpu_avx2" sh gen_linux.sh
 
@@ -49,9 +51,12 @@ COPY --from=static-build-amd64 /go/src/github.com/ollama/ollama/llm/build/linux/
 COPY --from=cpu_avx-build-amd64 /go/src/github.com/ollama/ollama/llm/build/linux/ llm/build/linux/
 COPY --from=cpu_avx2-build-amd64 /go/src/github.com/ollama/ollama/llm/build/linux/ llm/build/linux/
 COPY --from=cuda-build-amd64 /go/src/github.com/ollama/ollama/llm/build/linux/ llm/build/linux/
-ARG GOFLAGS
-ARG CGO_CFLAGS
-RUN go build -trimpath .
+
+RUN yum install libgomp -y
+ENV GOFLAGS=''
+ARG CGO_CFLAGS=''
+
+RUN go build -trimpath -ldflags '-extldflags "-fopenmp"' .
 
 # Runtime stages
 FROM --platform=linux/amd64 ubuntu:22.04 as runtime-amd64
