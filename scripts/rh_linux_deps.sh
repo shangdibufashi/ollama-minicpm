@@ -9,7 +9,17 @@ if grep -i "centos" /etc/system-release >/dev/null; then
     # Centos 7 derivatives have too old of a git version to run our generate script
     # uninstall and ignore failures
     yum remove -y git
+    
+    sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/CentOS-*.repo
+    sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/CentOS-*.repo
+    sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/CentOS-*.repo
+    yum repolist
     yum -y install epel-release centos-release-scl
+
+    sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/CentOS-*.repo
+    sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/CentOS-*.repo
+    sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/CentOS-*.repo
+    yum repolist
     yum -y install dnf
     if [ "${MACHINE}" = "x86_64" ]; then
         yum -y install https://repo.ius.io/ius-release-el7.rpm
